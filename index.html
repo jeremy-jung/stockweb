@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <form onsubmit = "submitHandler(this); return false;">
+            <input type="text" id="field">
+            <div>
+                Ticker
+                <input type="radio" name = "t_or_c" id="ticker" value="ticker" checked ="checked">
+            </div>
+            <div>
+                Company Name
+                <input type="radio" name = "t_or_c" id="company" value="company">
+            </div>
+            <input type = "submit">
+        </form>
+        <div id = "display">
+
+        </div>
+    </body>
+    <script>
+            const sendXHR = (method, URL, body) => {
+
+                var request = new XMLHttpRequest();
+
+                request.open(method, URL, true);
+
+                // body is undefined send GET request
+                if (body === undefined) {
+                    request.send();
+                }
+                
+                return request;
+            }
+
+            function getField() {
+                let element = document.getElementById("field");
+                let field = element.value;
+
+                return field;
+            }
+
+            function getRadio(radio) {
+                let value = "";
+
+                for (let i = 0; i < radio.length; i++) {
+                    if (radio[i].checked) {
+                        value = radio[i].value;
+                    }
+                }
+
+                return value;
+            }
+
+            function showArrayOnDisplay (array) {
+                
+                let display = document.getElementById("display");
+
+                display.innerHTML = "";
+
+                for (let index in array) {
+                    let info = array[index];
+
+                    let name = info.name;
+                    let ticker = info.ticker;
+
+                    let nameSpan = document.createElement("div");
+                    let tickerSpan = document.createElement('div');
+
+                    nameSpan.innerHTML = "Company Name: " + name;
+                    tickerSpan.innerHTML = "Ticker: " + ticker;
+
+                    let container = document.createElement("div");
+
+                    container.appendChild(nameSpan);
+                    container.appendChild(tickerSpan);
+
+                    display.appendChild(container);
+                }
+
+            }
+
+            async function submitHandler(form) {
+                let baseurl = "https://comp20stock.herokuapp.com/";
+                let tickerQuery = "ticker/?ticker=";
+                let nameQuery = "company/?name=";
+                let radioChoices = form.t_or_c;
+                let field = getField();
+                let rule = /[ ]/g
+                field = field.replace(rule, "%20");
+                console.log(field);
+                let choice = getRadio(form);
+                if (choice == "ticker") {
+                    let apiURL = baseurl + tickerQuery + field;
+
+                    let request = await sendXHR('GET', apiURL);
+                    
+                    request.onreadystatechange = function() {
+                        if (request.readyState === 4) {
+                            let response = JSON.parse(request.response);
+                            console.log(response);
+                            let arrayInfo = response.information;
+                            console.log(arrayInfo);
+
+                            showArrayOnDisplay(arrayInfo);
+                        }
+                    }
+
+                }
+                else {
+                    let apiURL = baseurl + nameQuery + field;
+
+                    let request = await sendXHR('GET', apiURL);
+
+                    request.onreadystatechange = function() {
+                        if (request.readyState === 4) {
+
+                            let response = JSON.parse(request.response);
+                            // console.log(response);
+                            // let name = response.name;
+                            // let ticker = response.ticker;
+                            
+                            let anArray = []; 
+                            anArray.push(response);
+                            showArrayOnDisplay(anArray);
+                        }
+                    }
+                }
+
+                return false;
+
+            }
+    </script>
+</html>
